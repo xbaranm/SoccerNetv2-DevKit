@@ -15,8 +15,9 @@ from SoccerNet.Evaluation.ActionSpotting import evaluate
 from SoccerNet.Evaluation.utils import AverageMeter, EVENT_DICTIONARY_V2, INVERSE_EVENT_DICTIONARY_V2
 from SoccerNet.Evaluation.utils import EVENT_DICTIONARY_V1, INVERSE_EVENT_DICTIONARY_V1
 
-
-
+import wandb
+MODELS_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
+WANDB_PATH =    '/workspace/mysocnet/.mnt/scratch/wandb/'
 
 def trainer(train_loader,
             val_loader,
@@ -29,12 +30,17 @@ def trainer(train_loader,
             max_epochs=1000,
             evaluation_frequency=20):
 
+    # TODO: Uncomment and set ProjectName
+    # os.makedirs(WANDB_PATH, exist_ok=True)
+    # wandb.init(project="ProjectName", dir=WANDB_PATH)
+    # wandb.watch(model, log="all")
+
     logging.info("start training")
 
     best_loss = 9e99
 
     for epoch in range(max_epochs):
-        best_model_path = os.path.join("models", model_name, "model.pth.tar")
+        best_model_path = os.path.join(MODELS_PATH, model_name, "model.pth.tar")
 
         # train for one epoch
         loss_training = train(train_loader, model, criterion,
@@ -67,8 +73,9 @@ def trainer(train_loader,
                 model,
                 model_name)
 
-            logging.info("Validation performance at epoch " +
-                         str(epoch+1) + " -> " + str(performance_validation))
+            logging.info("Validation performance at epoch " + str(epoch+1) + " -> " + str(performance_validation))
+            # TODO: Uncomment
+            # wandb.log({"epoch": epoch+1, "performance_validation": performance_validation})
 
         # Reduce LR on Plateau after patience reached
         prevLR = optimizer.param_groups[0]['lr']

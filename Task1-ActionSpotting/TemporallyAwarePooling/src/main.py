@@ -12,6 +12,14 @@ from model import Model
 from train import trainer, test, testSpotting
 from loss import NLLLoss
 
+# TODO:
+# import wandb
+from train import MODELS_PATH
+
+DATASET_PATH =  '/workspace/mysocnet/.mnt/dataset'
+FEATURES =      'ResNET_TF2.npy'
+# FEATURES =      'ResNET_SimCLR.npy'
+# FEATURES =      'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
 def main(args):
 
@@ -76,7 +84,7 @@ def main(args):
     del train_loader, val_loader, val_metric_loader
 
     # For the best model only
-    checkpoint = torch.load(os.path.join("models", args.model_name, "model.pth.tar"))
+    checkpoint = torch.load(os.path.join(MODELS_PATH, args.model_name, "model.pth.tar"))
     model.load_state_dict(checkpoint['state_dict'])
 
     # test on multiple splits [test/challenge]
@@ -106,6 +114,10 @@ def main(args):
         logging.info("a_mAP visibility unshown: " +  str( a_mAP_unshown))
         logging.info("a_mAP visibility unshown per class: " +  str( a_mAP_per_class_unshown))
 
+    # TODO:
+    # if(wandb.run):
+        # wandb.finish()
+
     return 
 
 if __name__ == '__main__':
@@ -113,8 +125,8 @@ if __name__ == '__main__':
 
     parser = ArgumentParser(description='context aware loss function', formatter_class=ArgumentDefaultsHelpFormatter)
     
-    parser.add_argument('--SoccerNet_path',   required=False, type=str,   default="/path/to/SoccerNet/",     help='Path for SoccerNet' )
-    parser.add_argument('--features',   required=False, type=str,   default="ResNET_TF2.npy",     help='Video features' )
+    parser.add_argument('--SoccerNet_path',   required=False, type=str,   default=DATASET_PATH,     help='Path for SoccerNet' )
+    parser.add_argument('--features',   required=False, type=str,   default=FEATURES,     help='Video features' )
     parser.add_argument('--max_epochs',   required=False, type=int,   default=1000,     help='Maximum number of epochs' )
     parser.add_argument('--load_weights',   required=False, type=str,   default=None,     help='weights to load' )
     parser.add_argument('--model_name',   required=False, type=str,   default="NetVLAD++",     help='named of the model to save' )
@@ -156,9 +168,9 @@ if __name__ == '__main__':
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % args.loglevel)
 
-    os.makedirs(os.path.join("models", args.model_name), exist_ok=True)
-    log_path = os.path.join("models", args.model_name,
-                            datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'))
+    os.makedirs(os.path.join(MODELS_PATH, args.model_name), exist_ok=True)
+    log_path = os.path.join(MODELS_PATH, args.model_name, datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'))
+
     logging.basicConfig(
         level=numeric_level,
         format=
@@ -177,3 +189,7 @@ if __name__ == '__main__':
     logging.info('Starting main function')
     main(args)
     logging.info(f'Total Execution Time is {time.time()-start} seconds')
+
+'''
+python main.py --SoccerNet_path /workspace/soccernet_v2/.mnt/nfs-data/dataset/ --features ResNET_SimCLR.npy 
+'''

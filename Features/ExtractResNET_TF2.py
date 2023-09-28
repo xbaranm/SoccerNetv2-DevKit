@@ -6,15 +6,6 @@ import SoccerNet
 
 import configparser
 import math
-try:
-    from tensorflow.keras.models import Model  # pip install tensorflow (==2.3.0)
-    from tensorflow.keras.applications.resnet import preprocess_input
-    # from tensorflow.keras.preprocessing.image import img_to_array
-    # from tensorflow.keras.preprocessing.image import load_img
-    from tensorflow import keras
-except:
-    print("issue loading TF2")
-    pass
 import os
 # import argparse
 import numpy as np
@@ -29,6 +20,20 @@ import random
 from SoccerNet.utils import getListGames
 from SoccerNet.Downloader import SoccerNetDownloader
 from SoccerNet.DataLoader import Frame, FrameCV
+
+############################################################################
+from torch.utils.data import DataLoader
+from pytorch_lightning.trainer import Trainer
+### Import model here ###
+from SimCLR_Model import FootballModel as model
+
+### Import dataset here ###
+from SimCLR_Dataset import SoccernetDataset as dataset
+
+CHECKPOINT_NAME =   'specify_checkpoint_here.ckpt'
+CHECKPOINT_PATH =   '/path/to/checkpoints/'
+DATASET_PATH =      '/path/to/dataset/'
+FEATURES_PATH =     '/path/to/features/'
 
 
 class FeatureExtractor():
