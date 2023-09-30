@@ -17,9 +17,13 @@ from loss import NLLLoss
 from train import MODELS_PATH
 
 DATASET_PATH =  '/workspace/mysocnet/.mnt/dataset'
-FEATURES =      'ResNET_TF2.npy'
-# FEATURES =      'ResNET_SimCLR.npy'
-# FEATURES =      'baidu_soccer_embeddings.npy' # feature_dim found: 8576
+
+class Features:
+    ResNET_TF2 = 'ResNET_TF2.npy'
+    ResNET_SimCLR = 'ResNET_SimCLR.npy'
+    baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
+
+FEATURES = Features.baidu_soccer_embeddings
 
 def main(args):
 
