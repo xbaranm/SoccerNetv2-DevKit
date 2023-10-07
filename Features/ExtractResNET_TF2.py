@@ -22,19 +22,29 @@ from SoccerNet.Downloader import SoccerNetDownloader
 from SoccerNet.DataLoader import Frame, FrameCV
 
 ############################################################################
+import psutil # To monitor RAM usage
+############################################################################
 from torch.utils.data import DataLoader
 from pytorch_lightning.trainer import Trainer
 ### Import model here ###
-from SimCLR_Model import FootballModel as model
-
+import timm
+from EfficientNet import EfficientNet
 ### Import dataset here ###
-from SimCLR_Dataset import SoccernetDataset as dataset
+from SoccernetDataset import SoccernetDataset
+############################################################################
 
 CHECKPOINT_NAME =   'specify_checkpoint_here.ckpt'
 CHECKPOINT_PATH =   '/path/to/checkpoints/'
-DATASET_PATH =      '/path/to/dataset/'
-FEATURES_PATH =     '/path/to/features/'
+DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
+FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
+
+def CheckMemoryUsage():
+    ramUsage = psutil.virtual_memory()[2]
+    print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
+    if ramUsage >= 75 :
+        print("***RAM usage exceeded 75%... Exiting program***")
+        exit()
 
 class FeatureExtractor():
     def __init__(self, rootFolder,
@@ -63,46 +73,45 @@ class FeatureExtractor():
             self.mySoccerNetDownloader = SoccerNetDownloader(self.rootFolder)
             self.mySoccerNetDownloader.password = self.tmp_HQ_videos
 
-        if "TF2" in self.back_end:
+        if "efficientnet" in self.back_end:
 
-            # create pretrained encoder (here ResNet152, pre-trained on ImageNet)
-            base_model = keras.applications.resnet.ResNet152(include_top=True,
-                                                             weights='imagenet',
-                                                             input_tensor=None,
-                                                             input_shape=None,
-                                                             pooling=None,
-                                                             classes=1000)
+            # model = timm.create_model(
+            #     'resnet18.a1_in1k',
+            #     pretrained=True,
+            #     num_classes=0,  # remove classifier nn.Linear
+            # )
+            self.model = EfficientNet()
 
-            # define model with output after polling layer (dim=2048)
-            self.model = Model(base_model.input,
-                               outputs=[base_model.get_layer("avg_pool").output])
-            self.model.trainable = False
 
     def extractAllGames(self):
         list_game = getListGames(self.split)
         for i_game, game in enumerate(tqdm(list_game)):
             try:
+                CheckMemoryUsage()
+
                 self.extractGameIndex(i_game)
-            except:
-                print(f"issue with game {i_game}, {game}")
+            except Exception as e:
+                print(f"*issue with game {i_game}, {game}")
+                print(e)
 
     def extractGameIndex(self, index):
         print(getListGames(self.split)[index])
         if self.video =="LQ":
-            for vid in ["1.mkv","2.mkv"]:
-                self.extract(video_path=os.path.join(self.rootFolder, getListGames(self.split)[index], vid))
+            for vid in ["1_720p.mkv","2_720p.mkv"]:
+                self.extract(video_path=os.path.join(self.rootFolder, getListGames(self.split)[index], vid), index=getListGames(self.split)[index], vid=vid)
 
         elif self.video == "HQ":
             
             # read config for raw HD video
             config = configparser.ConfigParser()
-            if not os.path.exists(os.path.join(self.rootFolder, getListGames(self.split)[index], "video.ini")) and self.tmp_HQ_videos is not None:
-                self.mySoccerNetDownloader.downloadVideoHD(
-                    game=getListGames(self.split)[index], file="video.ini")
+            # if not os.path.exists(os.path.join(self.rootFolder, getListGames(self.split)[index], "video.ini")) and self.tmp_HQ_videos is not None:
+                # self.mySoccerNetDownloader.downloadVideoHD(
+                    # game=getListGames(self.split)[index], file="video.ini")
             config.read(os.path.join(self.rootFolder, getListGames(self.split)[index], "video.ini"))
 
             # lopp over videos
             for vid in config.sections():
+                vid = vid.replace("HQ", "720p")
                 video_path = os.path.join(self.rootFolder, getListGames(self.split)[index], vid)
 
                 # cehck if already exists, then skip
@@ -112,10 +121,10 @@ class FeatureExtractor():
                     continue
 
                 #Download video if does not exist, but remove it afterwards
-                remove_afterwards = False
-                if not os.path.exists(video_path) and self.tmp_HQ_videos is not None:
-                    remove_afterwards = True
-                    self.mySoccerNetDownloader.downloadVideoHD(game=getListGames(self.split)[index], file=vid)
+                # remove_afterwards = False
+                # if not os.path.exists(video_path) and self.tmp_HQ_videos is not None:
+                    # remove_afterwards = True
+                    # self.mySoccerNetDownloader.downloadVideoHD(game=getListGames(self.split)[index], file=vid)
 
                 # extract feature for video
                 self.extract(video_path=video_path,
@@ -123,40 +132,83 @@ class FeatureExtractor():
                             duration=float(config[vid]["duration_second"]))
                 
                 # remove video if not present before
-                if remove_afterwards:
-                    os.remove(video_path)
+                # if remove_afterwards:
+                    # os.remove(video_path)
 
-    def extract(self, video_path, start=None, duration=None):
+    def extract(self, video_path, start=None, duration=None, index=None, vid=None):
         print("extract video", video_path, "from", start, duration)
         # feature_path = video_path.replace(
         #     ".mkv", f"_{self.feature}_{self.back_end}.npy")
-        feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+        # feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+        feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
+        frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
         if os.path.exists(feature_path) and not self.overwrite:
             return
         if "TF2" in self.back_end:
+            pass
+            # if self.grabber=="skvideo":
+            #     videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+            # elif self.grabber=="opencv":
+            #     videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+
+            # # create numpy aray (nb_frames x 224 x 224 x 3)
+            # # frames = np.array(videoLoader.frames)
+            # # if self.preprocess:
+            # frames = preprocess_input(videoLoader.frames)
             
-            if self.grabber=="skvideo":
-                videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
-            elif self.grabber=="opencv":
-                videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+            # if duration is None:
+            #     duration = videoLoader.time_second
+            #     # time_second = duration
+            # if self.verbose:
+            #     print("frames", frames.shape, "fps=", frames.shape[0]/duration)
 
-            # create numpy aray (nb_frames x 224 x 224 x 3)
-            # frames = np.array(videoLoader.frames)
-            # if self.preprocess:
-            frames = preprocess_input(videoLoader.frames)
-            
-            if duration is None:
-                duration = videoLoader.time_second
-                # time_second = duration
-            if self.verbose:
-                print("frames", frames.shape, "fps=", frames.shape[0]/duration)
+            # # predict the featrues from the frames (adjust batch size for smalled GPU)
+            # features = self.model.predict(frames, batch_size=64, verbose=1)
+            # if self.verbose:
+            #     print("features", features.shape, "fps=", features.shape[0]/duration)
+        elif "efficientnet" in self.back_end:
+            try:
+                # First try to load precomputed frames
+                try:
+                    print(f"*Trying to load frames: {frames_path}")
+                    os.makedirs(os.path.dirname(frames_path), exist_ok=True)
+                    frames = np.load(frames_path)
+                    print(f"*...frames loaded")
+                except:
+                    print("*No frames found. Computing from scratch")
+                    if self.grabber=="skvideo":
+                        videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+                    elif self.grabber=="opencv":
+                        videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+                    frames = videoLoader.frames
 
-            # predict the featrues from the frames (adjust batch size for smalled GPU)
-            features = self.model.predict(frames, batch_size=64, verbose=1)
-            if self.verbose:
-                print("features", features.shape, "fps=", features.shape[0]/duration)
+                    if duration is None:
+                        duration = videoLoader.time_second
+                    if self.verbose:
+                        print("frames", frames.shape, "fps=", frames.shape[0]/duration)
 
+                    # Store frames so they don't need to be computed everytime
+                    print(f"*Storing computed frames to: {frames_path}")
+                    np.save(frames_path, np.array(frames))
+
+                return # TODO: delete me
+                dataset = SoccernetDataset(frames)
+                data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=False)
+                trainer = Trainer()
+                features = trainer.predict(self.model, data_loader)
+                print(f"*features dim before concatenate: {np.shape(features)}")
+                features = np.concatenate(features, axis=0)
+                print(f"*features dim after concatenate: {np.shape(features)}")
+            except Exception as e:
+                print(f"[Extracting features Exception] {e}")
+        return # TODO: delete me
+        try:
+            # save the featrue in .npy format
+            os.makedirs(os.path.dirname(feature_path), exist_ok=True)
+            np.save(feature_path, features)
+        except Exception as e:
+            print(f"[Saving exception] {e}")
 
 
         # save the featrue in .npy format
@@ -170,8 +222,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Extract ResNet feature out of SoccerNet Videos.')
 
-    parser.add_argument('--soccernet_dirpath', type=str, default="/media/giancos/Football/SoccerNet/",
-                        help="Path for SoccerNet directory [default:/media/giancos/Football/SoccerNet/]")
+    parser.add_argument('--soccernet_dirpath', type=str, default=DATASET_PATH,
+                        help=f"Path for SoccerNet directory [default:{DATASET_PATH}]")
                         
     parser.add_argument('--overwrite', action="store_true",
                         help="Overwrite the features? [default:False]")
@@ -226,3 +278,7 @@ if __name__ == "__main__":
         myFeatureExtractor.extractAllGames()
     else:
         myFeatureExtractor.extractGameIndex(args.game_ID)
+'''
+python Features/ExtractResNET_TF2.py --back_end=efficientnet 
+                                    --features=ResNET --video LQ --transform crop --verbose --split all --overwrite                                   
+'''
