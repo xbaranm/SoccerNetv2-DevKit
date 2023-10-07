@@ -21,9 +21,10 @@ DATASET_PATH =  '/workspace/mysocnet/.mnt/dataset'
 class Features:
     ResNET_TF2 = 'ResNET_TF2.npy'
     ResNET_SimCLR = 'ResNET_SimCLR.npy'
+    ResNET_EfficientNet = 'ResNET_efficientnet.npy'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
-FEATURES = Features.baidu_soccer_embeddings
+FEATURES = Features.ResNET_EfficientNet
 
 def main(args):
 
