@@ -16,15 +16,16 @@ from loss import NLLLoss
 # import wandb
 from train import MODELS_PATH
 
-DATASET_PATH =  '/workspace/mysocnet/.mnt/dataset'
+DATASET_PATH =  '/workspace/mysocnet/.mnt/scratch/dataset'
 
 class Features:
     ResNET_TF2 = 'ResNET_TF2.npy'
     ResNET_SimCLR = 'ResNET_SimCLR.npy'
     ResNET_EfficientNet = 'ResNET_efficientnet.npy'
+    ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet.npy'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
-FEATURES = Features.ResNET_EfficientNet
+FEATURES = Features.ResNET_YF_EfficientNet
 
 def main(args):
 

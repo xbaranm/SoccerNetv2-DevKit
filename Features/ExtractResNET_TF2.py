@@ -29,12 +29,13 @@ from pytorch_lightning.trainer import Trainer
 ### Import model here ###
 import timm
 from EfficientNet import EfficientNet
+from YFEfficientNet import YFEfficientNet
 ### Import dataset here ###
 from SoccernetDataset import SoccernetDataset
 ############################################################################
 
-CHECKPOINT_NAME =   'specify_checkpoint_here.ckpt'
-CHECKPOINT_PATH =   '/path/to/checkpoints/'
+CHECKPOINT_NAME =   'EfficientNet/EfficientNet-epoch=13-valid_loss_epoch=0.465.ckpt'
+CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
 DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
@@ -81,6 +82,10 @@ class FeatureExtractor():
             #     num_classes=0,  # remove classifier nn.Linear
             # )
             self.model = EfficientNet()
+        elif "yf_efficientnet" in self.back_end:
+            self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME, output="unpooled_no_classifier"))
+            # self.model = YFEfficientNet(output="unpooled")
+
 
 
     def extractAllGames(self):
@@ -142,6 +147,7 @@ class FeatureExtractor():
         # feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
         feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
         frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
+        # new_frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
         if os.path.exists(feature_path) and not self.overwrite:
             return
@@ -167,12 +173,13 @@ class FeatureExtractor():
             # features = self.model.predict(frames, batch_size=64, verbose=1)
             # if self.verbose:
             #     print("features", features.shape, "fps=", features.shape[0]/duration)
-        elif "efficientnet" in self.back_end:
+        elif "efficientnet" in self.back_end or "yf_efficientnet" in self.back_end:
             try:
                 # First try to load precomputed frames
                 try:
                     print(f"*Trying to load frames: {frames_path}")
                     os.makedirs(os.path.dirname(frames_path), exist_ok=True)
+                    # os.makedirs(os.path.dirname(new_frames_path), exist_ok=True)
                     frames = np.load(frames_path)
                     print(f"*...frames loaded")
                 except:
@@ -192,7 +199,7 @@ class FeatureExtractor():
                     print(f"*Storing computed frames to: {frames_path}")
                     np.save(frames_path, np.array(frames))
 
-                return # TODO: delete me
+                # return # TODO: delete me
                 dataset = SoccernetDataset(frames)
                 data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=False)
                 trainer = Trainer()
@@ -202,7 +209,7 @@ class FeatureExtractor():
                 print(f"*features dim after concatenate: {np.shape(features)}")
             except Exception as e:
                 print(f"[Extracting features Exception] {e}")
-        return # TODO: delete me
+        # return # TODO: delete me
         try:
             # save the featrue in .npy format
             os.makedirs(os.path.dirname(feature_path), exist_ok=True)
