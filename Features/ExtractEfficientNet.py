@@ -51,7 +51,7 @@ class FeatureExtractor():
     def __init__(self, rootFolder,
                  feature="ResNET",
                  video="LQ",
-                 back_end="TF2",
+                 back_end="efficientnet",
                  overwrite=False,
                  transform="crop",
                  tmp_HQ_videos=None,
@@ -74,17 +74,7 @@ class FeatureExtractor():
             self.mySoccerNetDownloader = SoccerNetDownloader(self.rootFolder)
             self.mySoccerNetDownloader.password = self.tmp_HQ_videos
 
-        if "efficientnet" in self.back_end:
-
-            # model = timm.create_model(
-            #     'resnet18.a1_in1k',
-            #     pretrained=True,
-            #     num_classes=0,  # remove classifier nn.Linear
-            # )
-            self.model = EfficientNet()
-        elif "yf_efficientnet" in self.back_end:
-            self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME, output="unpooled_no_classifier"))
-            # self.model = YFEfficientNet(output="unpooled")
+        self.model = EfficientNet()
 
 
 
@@ -109,9 +99,6 @@ class FeatureExtractor():
             
             # read config for raw HD video
             config = configparser.ConfigParser()
-            # if not os.path.exists(os.path.join(self.rootFolder, getListGames(self.split)[index], "video.ini")) and self.tmp_HQ_videos is not None:
-                # self.mySoccerNetDownloader.downloadVideoHD(
-                    # game=getListGames(self.split)[index], file="video.ini")
             config.read(os.path.join(self.rootFolder, getListGames(self.split)[index], "video.ini"))
 
             # lopp over videos
@@ -125,91 +112,55 @@ class FeatureExtractor():
                     print("already exists, early skip")
                     continue
 
-                #Download video if does not exist, but remove it afterwards
-                # remove_afterwards = False
-                # if not os.path.exists(video_path) and self.tmp_HQ_videos is not None:
-                    # remove_afterwards = True
-                    # self.mySoccerNetDownloader.downloadVideoHD(game=getListGames(self.split)[index], file=vid)
-
                 # extract feature for video
                 self.extract(video_path=video_path,
                             start=float(config[vid]["start_time_second"]), 
                             duration=float(config[vid]["duration_second"]))
                 
-                # remove video if not present before
-                # if remove_afterwards:
-                    # os.remove(video_path)
 
     def extract(self, video_path, start=None, duration=None, index=None, vid=None):
         print("extract video", video_path, "from", start, duration)
-        # feature_path = video_path.replace(
-        #     ".mkv", f"_{self.feature}_{self.back_end}.npy")
-        # feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
         feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
         frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
-        # new_frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
         if os.path.exists(feature_path) and not self.overwrite:
             return
-        if "TF2" in self.back_end:
-            pass
-            # if self.grabber=="skvideo":
-            #     videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
-            # elif self.grabber=="opencv":
-            #     videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
-
-            # # create numpy aray (nb_frames x 224 x 224 x 3)
-            # # frames = np.array(videoLoader.frames)
-            # # if self.preprocess:
-            # frames = preprocess_input(videoLoader.frames)
-            
-            # if duration is None:
-            #     duration = videoLoader.time_second
-            #     # time_second = duration
-            # if self.verbose:
-            #     print("frames", frames.shape, "fps=", frames.shape[0]/duration)
-
-            # # predict the featrues from the frames (adjust batch size for smalled GPU)
-            # features = self.model.predict(frames, batch_size=64, verbose=1)
-            # if self.verbose:
-            #     print("features", features.shape, "fps=", features.shape[0]/duration)
-        elif "efficientnet" in self.back_end or "yf_efficientnet" in self.back_end:
+        
+        try:
+            # First try to load precomputed frames
             try:
-                # First try to load precomputed frames
-                try:
-                    print(f"*Trying to load frames: {frames_path}")
-                    os.makedirs(os.path.dirname(frames_path), exist_ok=True)
-                    # os.makedirs(os.path.dirname(new_frames_path), exist_ok=True)
-                    frames = np.load(frames_path)
-                    print(f"*...frames loaded")
-                except:
-                    print("*No frames found. Computing from scratch")
-                    if self.grabber=="skvideo":
-                        videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
-                    elif self.grabber=="opencv":
-                        videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
-                    frames = videoLoader.frames
+                print(f"*Trying to load frames: {frames_path}")
+                os.makedirs(os.path.dirname(frames_path), exist_ok=True)
+                # os.makedirs(os.path.dirname(new_frames_path), exist_ok=True)
+                frames = np.load(frames_path)
+                print(f"*...frames loaded")
+            except:
+                print("*No frames found. Computing from scratch")
+                if self.grabber=="skvideo":
+                    videoLoader = Frame(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+                elif self.grabber=="opencv":
+                    videoLoader = FrameCV(video_path, FPS=self.FPS, transform=self.transform, start=start, duration=duration)
+                frames = videoLoader.frames
 
-                    if duration is None:
-                        duration = videoLoader.time_second
-                    if self.verbose:
-                        print("frames", frames.shape, "fps=", frames.shape[0]/duration)
+                if duration is None:
+                    duration = videoLoader.time_second
+                if self.verbose:
+                    print("frames", frames.shape, "fps=", frames.shape[0]/duration)
 
-                    # Store frames so they don't need to be computed everytime
-                    print(f"*Storing computed frames to: {frames_path}")
-                    np.save(frames_path, np.array(frames))
+                # Store frames so they don't need to be computed everytime
+                print(f"*Storing computed frames to: {frames_path}")
+                np.save(frames_path, np.array(frames))
 
-                # return # TODO: delete me
-                dataset = SoccernetDataset(frames)
-                data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=False)
-                trainer = Trainer()
-                features = trainer.predict(self.model, data_loader)
-                print(f"*features dim before concatenate: {np.shape(features)}")
-                features = np.concatenate(features, axis=0)
-                print(f"*features dim after concatenate: {np.shape(features)}")
-            except Exception as e:
-                print(f"[Extracting features Exception] {e}")
-        # return # TODO: delete me
+            dataset = SoccernetDataset(frames)
+            data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=False)
+            trainer = Trainer()
+            features = trainer.predict(self.model, data_loader)
+            print(f"*features dim before concatenate: {np.shape(features)}")
+            features = np.concatenate(features, axis=0)
+            print(f"*features dim after concatenate: {np.shape(features)}")
+        except Exception as e:
+            print(f"[Extracting features Exception] {e}")
+
         try:
             # save the featrue in .npy format
             os.makedirs(os.path.dirname(feature_path), exist_ok=True)
@@ -242,8 +193,8 @@ if __name__ == "__main__":
                         help="ID of the game from which to extract features. If set to None, then loop over all games. [default:None]")
 
     # feature setup
-    parser.add_argument('--back_end', type=str, default="TF2",
-                        help="Backend TF2 or PT [default:TF2]")
+    parser.add_argument('--back_end', type=str, default="efficientnet",
+                        help="Backend efficientnet [default:efficientnet]")
     parser.add_argument('--features', type=str, default="ResNET",
                         help="ResNET or R25D [default:ResNET]")
     parser.add_argument('--transform', type=str, default="crop",
@@ -286,6 +237,6 @@ if __name__ == "__main__":
     else:
         myFeatureExtractor.extractGameIndex(args.game_ID)
 '''
-python Features/ExtractResNET_TF2.py --back_end=efficientnet 
+python Features/ExtractEfficientNet.py --back_end=efficientnet 
                                     --features=ResNET --video LQ --transform crop --verbose --split all --overwrite                                   
 '''
