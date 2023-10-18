@@ -11,7 +11,15 @@ import pickle as pkl
 
 from tqdm import tqdm
 
+class Features:
+    ResNET_TF2 = 'ResNET_TF2'
+    ResNET_SimCLR = 'ResNET_SimCLR'
+    ResNET_EfficientNet = 'ResNET_efficientnet'
+    ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet'
+    baidu_soccer_embeddings = 'baidu_soccer_embeddings' # feature_dim found: 8576
 
+FEATURES = Features.ResNET_YF_EfficientNet
+DATASET_PATH =  '/workspace/mysocnet/.mnt/scratch/dataset'
 
 def main(args):
 
@@ -36,7 +44,8 @@ def main(args):
         
 
         # Create PCA instance with svd_solver='full' and fit the data
-        pca = PCA(n_components=args.dim_reduction, svd_solver='full')
+        # pca = PCA(n_components=args.dim_reduction, svd_solver='full')
+        pca = IncrementalPCA(n_components=args.dim_reduction, svd_solver='full')
         print(datetime.now(), "PCA start")
         pca.fit(PCAdata)
         print(datetime.now(), "PCA fitted")
@@ -92,17 +101,17 @@ if __name__ == "__main__":
     # Argument parser
     parser = argparse.ArgumentParser(
         description='Extract ResNet feature out of SoccerNet Videos.')
-
-    parser.add_argument('--soccernet_dirpath', type=str, default="/media/giancos/Football/SoccerNet/",
-                        help="Path for SoccerNet directory [default:/media/giancos/Football/SoccerNet/]")
-    parser.add_argument('--features', type=str, default="ResNET_TF2.npy",
-                        help="features to perform PCA on [default:ResNET_TF2.npy]")    
-    parser.add_argument('--features_PCA', type=str, default="ResNET_TF2_PCA512.npy",
-                        help="name of reduced features [default:ResNET_TF2_PCA512.npy]")
-    parser.add_argument('--pca_file', type=str, default="pca_512_TF2.pkl",
-                        help="pickle for PCA [default:pca_512_TF2.pkl]")
-    parser.add_argument('--scaler_file', type=str, default="average_512_TF2.pkl",
-                        help="pickle for average [default:average_512_TF2.pkl]")
+# ResNET_TF2
+    parser.add_argument('--soccernet_dirpath', type=str, default=DATASET_PATH,
+                        help=f"Path for SoccerNet directory [default:{DATASET_PATH}]")
+    parser.add_argument('--features', type=str, default=f"{FEATURES}.npy",
+                        help=f"features to perform PCA on [default:{FEATURES}.npy]")    
+    parser.add_argument('--features_PCA', type=str, default=f"{FEATURES}_PCA512.npy",
+                        help=f"name of reduced features [default:{FEATURES}_PCA512.npy]")
+    parser.add_argument('--pca_file', type=str, default=f"pca_512_TF2.pkl",
+                        help=f"pickle for PCA [default:pca_512_{FEATURES}.pkl]")
+    parser.add_argument('--scaler_file', type=str, default=f"average_512_TF2.pkl",
+                        help=f"pickle for average [default:average_512_{FEATURES}.pkl]")
     parser.add_argument('--dim_reduction', type=int, default=512,
                         help="dimension reduction [default:512]")
 
@@ -113,3 +122,7 @@ if __name__ == "__main__":
     print(args)
 
     main(args)
+
+'''
+python ReduceFeaturesPCA.py 
+'''

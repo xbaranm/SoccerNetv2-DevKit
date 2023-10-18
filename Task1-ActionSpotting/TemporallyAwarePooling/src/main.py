@@ -120,6 +120,7 @@ def main(args):
         logging.info("a_mAP visibility unshown: " +  str( a_mAP_unshown))
         logging.info("a_mAP visibility unshown per class: " +  str( a_mAP_per_class_unshown))
 
+    os.remove(os.path.join(MODELS_PATH, args.model_name, "model.pth.tar"))
     # TODO:
     # if(wandb.run):
         # wandb.finish()
