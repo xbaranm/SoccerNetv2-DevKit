@@ -23,9 +23,11 @@ class Features:
     ResNET_SimCLR = 'ResNET_SimCLR.npy'
     ResNET_EfficientNet = 'ResNET_efficientnet.npy'
     ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet.npy'
+    ResNET_WHOLE_YF_EfficientNet = 'ResNET_whole_yf_efficientnet.npy'
+    ResNET_OUR_YF_EfficientNet = 'ResNET_our_yf_efficientnet.npy'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
-FEATURES = Features.ResNET_YF_EfficientNet
+FEATURES = Features.ResNET_OUR_YF_EfficientNet
 
 def main(args):
 
