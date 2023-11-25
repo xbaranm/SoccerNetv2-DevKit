@@ -28,13 +28,13 @@ from torch.utils.data import DataLoader
 from pytorch_lightning.trainer import Trainer
 ### Import model here ###
 import timm
-from EfficientNet import EfficientNet
+from SIMCLR_EfficientNet import EfficientNet
 from YFEfficientNet import YFEfficientNet
 ### Import dataset here ###
 from SoccernetDataset import SoccernetDataset
 ############################################################################
 
-CHECKPOINT_NAME =   'WHOLE_EfficientNet/EfficientNet-epoch=21-valid_loss_epoch=0.047.ckpt'
+CHECKPOINT_NAME =   'SIMCLR_EfficientNet/EfficientNet-epoch=294-valid_loss_epoch=0.082.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
 DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
@@ -74,9 +74,9 @@ class FeatureExtractor():
             self.mySoccerNetDownloader = SoccerNetDownloader(self.rootFolder)
             self.mySoccerNetDownloader.password = self.tmp_HQ_videos
 
-        # self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="unpooled_no_classifier")
-        self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="pooled_features")
-        # self.model = YFEfficientNet(output="unpooled")
+        # Load appropriate model
+        self.model = EfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="features")
+
 
 
 
@@ -196,8 +196,8 @@ if __name__ == "__main__":
                         help="ID of the game from which to extract features. If set to None, then loop over all games. [default:None]")
 
     # feature setup
-    parser.add_argument('--back_end', type=str, default="whole_yf_efficientnet",
-                        help="Backend YFEfficientNet [default:whole_yf_efficientnet]")
+    parser.add_argument('--back_end', type=str, default="simclr_yf_efficientnet",
+                        help="Backend SIMCLR_EfficientNet [default:simclr_yf_efficientnet]")
     parser.add_argument('--features', type=str, default="ResNET",
                         help="ResNET or R25D [default:ResNET]")
     parser.add_argument('--transform', type=str, default="crop",
