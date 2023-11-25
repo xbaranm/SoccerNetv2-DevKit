@@ -3,5 +3,5 @@ do
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     echo "@ Starting extraction script number $i @"
     echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    python ExtractSIMCLR_EfficientNet.py
+    python ExtractOUR2_EfficientNet.py 
 done
