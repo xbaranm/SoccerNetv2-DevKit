@@ -28,6 +28,7 @@ class NetVLAD(nn.Module):
         self.out_dim = cluster_size*feature_size
 
     def forward(self,x):
+        x = x.float()
         # x [BS, T, D]
         max_sample = x.size()[1]
 

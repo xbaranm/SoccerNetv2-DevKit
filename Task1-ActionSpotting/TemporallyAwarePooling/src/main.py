@@ -25,11 +25,15 @@ class Features:
     ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet.npy'
     ResNET_WHOLE_YF_EfficientNet = 'ResNET_whole_yf_efficientnet.npy'
     ResNET_SIMCLR_YF_EfficientNet = 'ResNET_simclr_yf_efficientnet.npy'
+    ResNET_SIMCLR_YF_EfficientNet_PCA = 'ResNET_simclr_yf_efficientnet_PCA512.npy'
     ResNET_OUR_YF_EfficientNet = 'ResNET_our_yf_efficientnet.npy'
     ResNET_OUR2_YF_EfficientNet = 'ResNET_our2_yf_efficientnet.npy'
+    ResNET_OUR2_YF_EfficientNet_PCA = 'ResNET_our2_yf_efficientnet_PCA512.npy'
+    ResNET_EfficientNet_B3 = 'ResNET_efficientnet_b3.npy'
+    ResNET_EfficientNet_B5 = 'ResNET_efficientnet_b5.npy'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
-FEATURES = Features.ResNET_OUR2_YF_EfficientNet
+FEATURES = Features.ResNET_TF2
 
 def main(args):
 
