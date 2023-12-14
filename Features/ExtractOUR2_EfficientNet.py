@@ -22,7 +22,7 @@ from SoccerNet.Downloader import SoccerNetDownloader
 from SoccerNet.DataLoader import Frame, FrameCV
 
 ############################################################################
-import psutil # To monitor RAM usage
+from MemoryWatchdog import CheckMemoryUsage # To monitor RAM usage
 ############################################################################
 from torch.utils.data import DataLoader
 from pytorch_lightning.trainer import Trainer
@@ -40,12 +40,12 @@ DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
 
-def CheckMemoryUsage():
-    ramUsage = psutil.virtual_memory()[2]
-    print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
-    if ramUsage >= 75 :
-        print("***RAM usage exceeded 75%... Exiting program***")
-        exit()
+# def CheckMemoryUsage():
+#     ramUsage = psutil.virtual_memory()[2]
+#     print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
+#     if ramUsage >= 75 :
+#         print("***RAM usage exceeded 75%... Exiting program***")
+#         exit()
 
 class FeatureExtractor():
     def __init__(self, rootFolder,
@@ -125,8 +125,8 @@ class FeatureExtractor():
         feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
         frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
-        if os.path.exists(feature_path) and not self.overwrite:
-            return
+        # if os.path.exists(feature_path) and not self.overwrite:
+            # return
       
         try:
             # First try to load precomputed frames

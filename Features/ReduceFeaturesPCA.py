@@ -16,9 +16,15 @@ class Features:
     ResNET_SimCLR = 'ResNET_SimCLR'
     ResNET_EfficientNet = 'ResNET_efficientnet'
     ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet'
+    ResNET_WHOLE_YF_EfficientNet = 'ResNET_whole_yf_efficientnet'
+    ResNET_SIMCLR_YF_EfficientNet = 'ResNET_simclr_yf_efficientnet'
+    ResNET_OUR_YF_EfficientNet = 'ResNET_our_yf_efficientnet'
+    ResNET_OUR2_YF_EfficientNet = 'ResNET_our2_yf_efficientnet'
+    ResNET_EfficientNet_B3 = 'ResNET_efficientnet_b3'
+    ResNET_EfficientNet_B5 = 'ResNET_efficientnet_b5'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings' # feature_dim found: 8576
 
-FEATURES = Features.ResNET_YF_EfficientNet
+FEATURES = Features.ResNET_OUR2_YF_EfficientNet
 DATASET_PATH =  '/workspace/mysocnet/.mnt/scratch/dataset'
 
 def main(args):
@@ -45,7 +51,8 @@ def main(args):
 
         # Create PCA instance with svd_solver='full' and fit the data
         # pca = PCA(n_components=args.dim_reduction, svd_solver='full')
-        pca = IncrementalPCA(n_components=args.dim_reduction, svd_solver='full')
+        # pca = PCA(n_components=args.dim_reduction, svd_solver='full')
+        pca = IncrementalPCA(n_components=args.dim_reduction)
         print(datetime.now(), "PCA start")
         pca.fit(PCAdata)
         print(datetime.now(), "PCA fitted")
@@ -108,9 +115,9 @@ if __name__ == "__main__":
                         help=f"features to perform PCA on [default:{FEATURES}.npy]")    
     parser.add_argument('--features_PCA', type=str, default=f"{FEATURES}_PCA512.npy",
                         help=f"name of reduced features [default:{FEATURES}_PCA512.npy]")
-    parser.add_argument('--pca_file', type=str, default=f"pca_512_TF2.pkl",
+    parser.add_argument('--pca_file', type=str, default=f"pca_512_{FEATURES}.pkl",
                         help=f"pickle for PCA [default:pca_512_{FEATURES}.pkl]")
-    parser.add_argument('--scaler_file', type=str, default=f"average_512_TF2.pkl",
+    parser.add_argument('--scaler_file', type=str, default=f"average_512_{FEATURES}.pkl",
                         help=f"pickle for average [default:average_512_{FEATURES}.pkl]")
     parser.add_argument('--dim_reduction', type=int, default=512,
                         help="dimension reduction [default:512]")
