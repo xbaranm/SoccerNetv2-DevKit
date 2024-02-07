@@ -6,6 +6,8 @@ from json_io import label2vector, predictions2vector
 from SoccerNet.Downloader import getListGames
 from metrics_visibility_fast import average_mAP
 
+DATASET_PATH =  '/workspace/mysocnet/.mnt/scratch/dataset/'
+
 def evaluate_average_mAP(SoccerNet_path, Predictions_path, Evaluation_set, framerate):
     list_games = getListGames(Evaluation_set)
     targets_numpy = list()
@@ -66,8 +68,8 @@ if __name__ == '__main__':
     # Load the arguments
     parser = ArgumentParser(description='context aware loss function', formatter_class=ArgumentDefaultsHelpFormatter)
     
-    parser.add_argument('--SoccerNet_path',   required=True, type=str, help='Path to the SoccerNet-V2 dataset folder' )
-    parser.add_argument('--Predictions_path',   required=True, type=str, help='Path to the predictions folder' )
+    parser.add_argument('--SoccerNet_path',   required=False, type=str, default=DATASET_PATH, help='Path to the SoccerNet-V2 dataset folder' )
+    parser.add_argument('--Predictions_path',   required=False, type=str, default="outputs/", help='Path to the predictions folder' )
     parser.add_argument('--Evaluation_set',   required=False, type=str, default= "test", help='Set on which to evaluate the performances' )
     parser.add_argument('--framerate', required=False, type=int,   default=2,     help='Framerate of the input features' )
 

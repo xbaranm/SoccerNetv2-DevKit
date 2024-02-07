@@ -10,6 +10,10 @@ from preprocessing import batch2long, timestamps2long
 from json_io import predictions2json
 from SoccerNet.Downloader import getListGames
 
+import wandb
+MODELS_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
+WANDB_PATH =    '/workspace/mysocnet/.mnt/scratch/wandb/'
+
 def trainer(train_loader,
             val_loader,
             val_metric_loader,
@@ -29,7 +33,7 @@ def trainer(train_loader,
     best_metric = -1
 
     for epoch in range(max_epochs):
-        best_model_path = os.path.join("models", model_name, "model.pth.tar")
+        best_model_path = os.path.join(MODELS_PATH, model_name, "model.pth.tar")
 
 
         # train for one epoch
@@ -60,7 +64,7 @@ def trainer(train_loader,
             'best_loss': best_loss,
             'optimizer': optimizer.state_dict(),
         }
-        os.makedirs(os.path.join("models", model_name), exist_ok=True)
+        os.makedirs(os.path.join(MODELS_PATH, model_name), exist_ok=True)
 
         # Remember best loss and save checkpoint
         is_better = loss_validation < best_loss
