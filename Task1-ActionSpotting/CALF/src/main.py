@@ -16,6 +16,29 @@ from loss import ContextAwareLoss, SpottingLoss
 torch.manual_seed(0)
 np.random.seed(0)
 
+from train import MODELS_PATH
+
+DATASET_PATH =  '/workspace/mysocnet/.mnt/scratch/dataset'
+
+class Features:
+    ResNET_TF2 = 'ResNET_TF2.npy'
+    ResNET_SimCLR = 'ResNET_SimCLR.npy'
+    ResNET_EfficientNet = 'ResNET_efficientnet.npy'
+    ResNET_YF_EfficientNet = 'ResNET_yf_efficientnet.npy'
+    ResNET_WHOLE_YF_EfficientNet = 'ResNET_whole_yf_efficientnet.npy'
+    ResNET_SIMCLR_YF_EfficientNet = 'ResNET_simclr_yf_efficientnet.npy'
+    ResNET_WHOLE_SIMCLR_YF_EfficientNet = 'ResNET_simclr_whole_yf_efficientnet.npy'
+    ResNET_SIMCLR_YF_EfficientNet_PCA = 'ResNET_simclr_yf_efficientnet_PCA512.npy'
+    ResNET_OUR_YF_EfficientNet = 'ResNET_our_yf_efficientnet.npy'
+    ResNET_OUR2_YF_EfficientNet = 'ResNET_our2_yf_efficientnet.npy'
+    ResNET_WHOLE_OUR2_YF_EfficientNet = 'ResNET_our2_whole_yf_efficientnet.npy'
+    ResNET_OUR2_YF_EfficientNet_PCA = 'ResNET_our2_yf_efficientnet_PCA512.npy'
+    ResNET_EfficientNet_B3 = 'ResNET_efficientnet_b3.npy'
+    ResNET_EfficientNet_B5 = 'ResNET_efficientnet_b5.npy'
+    baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
+
+FEATURES = Features.ResNET_WHOLE_OUR2_YF_EfficientNet
+
 def main(args):
 
     logging.info("Parameters:")
@@ -77,7 +100,7 @@ def main(args):
                 max_epochs=args.max_epochs, evaluation_frequency=args.evaluation_frequency)
 
     # Load the best model and compute its performance
-    checkpoint = torch.load(os.path.join("models", args.model_name, "model.pth.tar"))
+    checkpoint = torch.load(os.path.join(MODELS_PATH, args.model_name, "model.pth.tar"))
     model.load_state_dict(checkpoint['state_dict'])
 
     a_mAP, a_mAP_per_class, a_mAP_visible, a_mAP_per_class_visible, a_mAP_unshown, a_mAP_per_class_unshown = test(test_loader, model=model, model_name=args.model_name, save_predictions=True)
@@ -102,8 +125,8 @@ if __name__ == '__main__':
     # Load the arguments
     parser = ArgumentParser(description='context aware loss function', formatter_class=ArgumentDefaultsHelpFormatter)
     
-    parser.add_argument('--SoccerNet_path',   required=True, type=str, help='Path to the SoccerNet-V2 dataset folder' )
-    parser.add_argument('--features',   required=False, type=str,   default="ResNET_PCA512.npy",     help='Video features' )
+    parser.add_argument('--SoccerNet_path',   required=False, type=str, default=DATASET_PATH, help='Path to the SoccerNet-V2 dataset folder' )
+    parser.add_argument('--features',   required=False, type=str,   default=FEATURES,     help='Video features' )
     parser.add_argument('--max_epochs',   required=False, type=int,   default=1000,     help='Maximum number of epochs' )
     parser.add_argument('--load_weights',   required=False, type=str,   default=None,     help='weights to load' )
     parser.add_argument('--model_name',   required=False, type=str,   default="CALF",     help='named of the model to save' )
@@ -111,7 +134,7 @@ if __name__ == '__main__':
     parser.add_argument('--challenge',   required=False, action='store_true',  help='Perform evaluations on the challenge set to produce json files' )
 
     parser.add_argument('--K_params', required=False, type=type(torch.FloatTensor),   default=None,     help='K_parameters' )
-    parser.add_argument('--num_features', required=False, type=int,   default=512,     help='Number of input features' )
+    parser.add_argument('--num_features', required=True, type=int,     help='Number of input features' )
     parser.add_argument('--chunks_per_epoch', required=False, type=int,   default=18000,     help='Number of chunks per epoch' )
     parser.add_argument('--evaluation_frequency', required=False, type=int,   default=20,     help='Number of chunks per epoch' )
     parser.add_argument('--dim_capsule', required=False, type=int,   default=16,     help='Dimension of the capsule network' )
@@ -140,9 +163,8 @@ if __name__ == '__main__':
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: %s' % args.loglevel)
 
-    os.makedirs(os.path.join("models", args.model_name), exist_ok=True)
-    log_path = os.path.join("models", args.model_name,
-                            datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'))
+    os.makedirs(os.path.join(MODELS_PATH, args.model_name), exist_ok=True)
+    log_path = os.path.join(MODELS_PATH, args.model_name, datetime.now().strftime('%Y-%m-%d_%H-%M-%S.log'))
     logging.basicConfig(
         level=numeric_level,
         format=
