@@ -28,30 +28,23 @@ from torch.utils.data import DataLoader
 from pytorch_lightning.trainer import Trainer
 ### Import model here ###
 import timm
-from EfficientNet import EfficientNet
-from OUR2_EfficientNet import OUR_EfficientNet
+from OUR3_EfficientNet import OUR_EfficientNet
 ### Import dataset here ###
 from SoccernetDataset import SoccernetDataset
 ############################################################################
 
-CHECKPOINT_NAME =   'OUR2_EfficientNet/OUR_EfficientNet-epoch=204-valid_loss_epoch=0.207.ckpt'
+CHECKPOINT_NAME =   'OUR3_EfficientNet/OUR_EfficientNet-epoch=491-valid_loss_epoch=0.149.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
-DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
+DATASET_PATH =      '/workspace/mysocnet/.mnt/scratch/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
-
-# def CheckMemoryUsage():
-#     ramUsage = psutil.virtual_memory()[2]
-#     print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
-#     if ramUsage >= 75 :
-#         print("***RAM usage exceeded 75%... Exiting program***")
-#         exit()
+BACKEND =           'our3_yf_efficientnet'
 
 class FeatureExtractor():
     def __init__(self, rootFolder,
                  feature="ResNET",
                  video="LQ",
-                 back_end="our2_yf_efficientnet",
+                 back_end=BACKEND,
                  overwrite=False,
                  transform="crop",
                  tmp_HQ_videos=None,
@@ -74,9 +67,9 @@ class FeatureExtractor():
             self.mySoccerNetDownloader = SoccerNetDownloader(self.rootFolder)
             self.mySoccerNetDownloader.password = self.tmp_HQ_videos
 
-        # self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="unpooled_no_classifier")
+        # Load appropriate model
         self.model = OUR_EfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="features")
-        # self.model = YFEfficientNet(output="unpooled")
+
 
 
 
@@ -109,7 +102,8 @@ class FeatureExtractor():
                 video_path = os.path.join(self.rootFolder, getListGames(self.split)[index], vid)
 
                 # cehck if already exists, then skip
-                feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+                # feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+                feature_path = video_path[:-4] + f"_{self.back_end}.npy"
                 if os.path.exists(feature_path) and not self.overwrite:
                     print("already exists, early skip")
                     continue
@@ -122,11 +116,12 @@ class FeatureExtractor():
 
     def extract(self, video_path, start=None, duration=None, index=None, vid=None):
         print("extract video", video_path, "from", start, duration)
-        feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
+        # feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
+        feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.back_end}.npy"
         frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
-        # if os.path.exists(feature_path) and not self.overwrite:
-            # return
+        if os.path.exists(feature_path) and not self.overwrite:
+            return
       
         try:
             # First try to load precomputed frames
@@ -188,16 +183,16 @@ if __name__ == "__main__":
                         
     parser.add_argument('--overwrite', action="store_true",
                         help="Overwrite the features? [default:False]")
-    parser.add_argument('--GPU', type=int, default=0,
-                        help="ID of the GPU to use [default:0]")
+    # parser.add_argument('--GPU', type=int, default=0,
+    #                     help="ID of the GPU to use [default:0]")
     parser.add_argument('--verbose', action="store_true",
                         help="Print verbose? [default:False]")
     parser.add_argument('--game_ID', type=int, default=None,
                         help="ID of the game from which to extract features. If set to None, then loop over all games. [default:None]")
 
     # feature setup
-    parser.add_argument('--back_end', type=str, default="our2_yf_efficientnet",
-                        help="Backend OUR2_EfficientNet [default:our2_yf_efficientnet]")
+    parser.add_argument('--back_end', type=str, default=BACKEND,
+                        help=f"Backend OUR3_EfficientNet [default:{BACKEND}]")
     parser.add_argument('--features', type=str, default="ResNET",
                         help="ResNET or R25D [default:ResNET]")
     parser.add_argument('--transform', type=str, default="crop",
@@ -216,9 +211,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    if args.GPU >= 0:
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
+    # if args.GPU >= 0:
+    #     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
 
     myFeatureExtractor = FeatureExtractor(
         args.soccernet_dirpath, 

@@ -28,30 +28,22 @@ from torch.utils.data import DataLoader
 from pytorch_lightning.trainer import Trainer
 ### Import model here ###
 import timm
-from EfficientNet_B3 import EfficientNet_B3
-# from OUR2_EfficientNet import OUR_EfficientNet
+from ImageNet_ResNET_152 import ImageNet_ResNET_152
 ### Import dataset here ###
 from SoccernetDataset import SoccernetDataset
 ############################################################################
 
-# CHECKPOINT_NAME =   'OUR2_EfficientNet/OUR_EfficientNet-epoch=204-valid_loss_epoch=0.207.ckpt'
+# CHECKPOINT_NAME =   'OUR2_ResNET_152/OUR_ResNET_152-epoch=84-valid_loss_epoch=0.278.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
 DATASET_PATH =      '/workspace/mysocnet/.mnt/scratch/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
 
-# def CheckMemoryUsage():
-#     ramUsage = psutil.virtual_memory()[2]
-#     print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
-#     if ramUsage >= 75 :
-#         print("***RAM usage exceeded 75%... Exiting program***")
-#         exit()
-
 class FeatureExtractor():
     def __init__(self, rootFolder,
                  feature="ResNET",
                  video="LQ",
-                 back_end="efficientnet_b3",
+                 back_end="imagenet_resnet152",
                  overwrite=False,
                  transform="crop",
                  tmp_HQ_videos=None,
@@ -74,10 +66,8 @@ class FeatureExtractor():
             self.mySoccerNetDownloader = SoccerNetDownloader(self.rootFolder)
             self.mySoccerNetDownloader.password = self.tmp_HQ_videos
 
-        # self.model = YFEfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="unpooled_no_classifier")
-        # self.model = OUR_EfficientNet.load_from_checkpoint(os.path.join(CHECKPOINT_PATH, CHECKPOINT_NAME), output="features")
-        self.model = EfficientNet_B3()
-
+        # Load appropriate model
+        self.model = ImageNet_ResNET_152()
 
 
     def extractAllGames(self):
@@ -109,7 +99,8 @@ class FeatureExtractor():
                 video_path = os.path.join(self.rootFolder, getListGames(self.split)[index], vid)
 
                 # cehck if already exists, then skip
-                feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+                # feature_path = video_path[:-4] + f"_{self.feature}_{self.back_end}.npy"
+                feature_path = video_path[:-4] + f"_{self.back_end}.npy"
                 if os.path.exists(feature_path) and not self.overwrite:
                     print("already exists, early skip")
                     continue
@@ -122,7 +113,8 @@ class FeatureExtractor():
 
     def extract(self, video_path, start=None, duration=None, index=None, vid=None):
         print("extract video", video_path, "from", start, duration)
-        feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
+        # feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.feature}_{self.back_end}.npy"
+        feature_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_{self.back_end}.npy"
         frames_path = os.path.join(FEATURES_PATH, index, vid)[:-9] + f"_frames.npy"
 
         if os.path.exists(feature_path) and not self.overwrite:
@@ -196,8 +188,8 @@ if __name__ == "__main__":
                         help="ID of the game from which to extract features. If set to None, then loop over all games. [default:None]")
 
     # feature setup
-    parser.add_argument('--back_end', type=str, default="efficientnet_b3",
-                        help="Backend EfficientNet_B3 [default:efficientnet_b3]")
+    parser.add_argument('--back_end', type=str, default="imagenet_resnet152",
+                        help="Backend ImageNet_ResNET-152 [default:imagenet_resnet152]")
     parser.add_argument('--features', type=str, default="ResNET",
                         help="ResNET or R25D [default:ResNET]")
     parser.add_argument('--transform', type=str, default="crop",

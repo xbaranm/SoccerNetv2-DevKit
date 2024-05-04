@@ -36,7 +36,7 @@ from SoccernetDataset import SoccernetDataset
 
 # CHECKPOINT_NAME =   'OUR2_EfficientNet/OUR_EfficientNet-epoch=204-valid_loss_epoch=0.207.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
-DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
+DATASET_PATH =      '/workspace/mysocnet/.mnt/scratch/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
 
@@ -51,7 +51,7 @@ class FeatureExtractor():
     def __init__(self, rootFolder,
                  feature="ResNET",
                  video="LQ",
-                 back_end="our2_yf_efficientnet",
+                 back_end="efficientnet_b5",
                  overwrite=False,
                  transform="crop",
                  tmp_HQ_videos=None,
@@ -188,8 +188,8 @@ if __name__ == "__main__":
                         
     parser.add_argument('--overwrite', action="store_true",
                         help="Overwrite the features? [default:False]")
-    parser.add_argument('--GPU', type=int, default=0,
-                        help="ID of the GPU to use [default:0]")
+    # parser.add_argument('--GPU', type=int, default=0,
+    #                     help="ID of the GPU to use [default:0]")
     parser.add_argument('--verbose', action="store_true",
                         help="Print verbose? [default:False]")
     parser.add_argument('--game_ID', type=int, default=None,
@@ -216,9 +216,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    if args.GPU >= 0:
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
+    # if args.GPU >= 0:
+    #     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
 
     myFeatureExtractor = FeatureExtractor(
         args.soccernet_dirpath, 

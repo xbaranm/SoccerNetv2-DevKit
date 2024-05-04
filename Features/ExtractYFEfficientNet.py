@@ -36,7 +36,7 @@ from SoccernetDataset import SoccernetDataset
 
 CHECKPOINT_NAME =   'EfficientNet/EfficientNet-epoch=270-valid_loss_epoch=0.088.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
-DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
+DATASET_PATH =      '/workspace/mysocnet/.mnt/scratch/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
 
@@ -188,8 +188,8 @@ if __name__ == "__main__":
                         
     parser.add_argument('--overwrite', action="store_true",
                         help="Overwrite the features? [default:False]")
-    parser.add_argument('--GPU', type=int, default=0,
-                        help="ID of the GPU to use [default:0]")
+    # parser.add_argument('--GPU', type=int, default=0,
+    #                     help="ID of the GPU to use [default:0]")
     parser.add_argument('--verbose', action="store_true",
                         help="Print verbose? [default:False]")
     parser.add_argument('--game_ID', type=int, default=None,
@@ -216,9 +216,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    if args.GPU >= 0:
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
+    # if args.GPU >= 0:
+    #     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
 
     myFeatureExtractor = FeatureExtractor(
         args.soccernet_dirpath, 
