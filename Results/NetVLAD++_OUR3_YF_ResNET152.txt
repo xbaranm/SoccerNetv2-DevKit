@@ -1,0 +1,3 @@
+BGR -> RGB with Normalization
+
+[preliminary] OUR3 YF ResNET-18 model after epoch 98 and valid loss 0.185

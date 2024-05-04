@@ -34,24 +34,17 @@ from YFEfficientNet import YFEfficientNet
 from SoccernetDataset import SoccernetDataset
 ############################################################################
 
-CHECKPOINT_NAME =   'SIMCLR_EfficientNet/EfficientNet-epoch=294-valid_loss_epoch=0.082.ckpt'
+CHECKPOINT_NAME =   'SIMCLR_EfficientNet/EfficientNet-epoch=392-valid_loss_epoch=0.067.ckpt'
 CHECKPOINT_PATH =   '/workspace/mysocnet/.mnt/scratch/models/'
-DATASET_PATH =      '/workspace/mysocnet/.mnt/dataset/'
+DATASET_PATH =      '/workspace/mysocnet/.mnt/scratch/dataset/'
 FEATURES_PATH =     '/workspace/mysocnet/.mnt/scratch/dataset/'
 
-
-# def CheckMemoryUsage():
-#     ramUsage = psutil.virtual_memory()[2]
-#     print(f"***RAM memory % used: {psutil.virtual_memory()[2]}***")
-#     if ramUsage >= 85 :
-#         print("***RAM usage exceeded 85%... Exiting program***")
-#         exit()
-
+BACKEND =           'simclr_yf_efficientnet'
 class FeatureExtractor():
     def __init__(self, rootFolder,
                  feature="ResNET",
                  video="LQ",
-                 back_end="whole_yf_efficientnet",
+                 back_end=BACKEND,
                  overwrite=False,
                  transform="crop",
                  tmp_HQ_videos=None,
@@ -156,7 +149,7 @@ class FeatureExtractor():
             # return # TODO: delete me
             dataset = SoccernetDataset(frames)
             data_loader = DataLoader(dataset=dataset, batch_size=16, shuffle=False)
-            trainer = Trainer()
+            trainer = Trainer(accelerator="gpu")
             features = trainer.predict(self.model, data_loader)
             print(f"*features dim before concatenate: {np.shape(features)}")
             features = np.concatenate(features, axis=0)
@@ -188,16 +181,16 @@ if __name__ == "__main__":
                         
     parser.add_argument('--overwrite', action="store_true",
                         help="Overwrite the features? [default:False]")
-    parser.add_argument('--GPU', type=int, default=0,
-                        help="ID of the GPU to use [default:0]")
+    # parser.add_argument('--GPU', type=int, default=0,
+    #                     help="ID of the GPU to use [default:0]")
     parser.add_argument('--verbose', action="store_true",
                         help="Print verbose? [default:False]")
     parser.add_argument('--game_ID', type=int, default=None,
                         help="ID of the game from which to extract features. If set to None, then loop over all games. [default:None]")
 
     # feature setup
-    parser.add_argument('--back_end', type=str, default="simclr_yf_efficientnet",
-                        help="Backend SIMCLR_EfficientNet [default:simclr_yf_efficientnet]")
+    parser.add_argument('--back_end', type=str, default=BACKEND,
+                        help=f"Backend SIMCLR_EfficientNet [default:{BACKEND}]")
     parser.add_argument('--features', type=str, default="ResNET",
                         help="ResNET or R25D [default:ResNET]")
     parser.add_argument('--transform', type=str, default="crop",
@@ -216,9 +209,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    if args.GPU >= 0:
-        os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
+    # if args.GPU >= 0:
+    #     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    #     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.GPU)
 
     myFeatureExtractor = FeatureExtractor(
         args.soccernet_dirpath, 

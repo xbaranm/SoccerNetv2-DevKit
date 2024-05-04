@@ -33,9 +33,24 @@ class Features:
     ResNET_OUR2_YF_EfficientNet_PCA = 'ResNET_our2_yf_efficientnet_PCA512.npy'
     ResNET_EfficientNet_B3 = 'ResNET_efficientnet_b3.npy'
     ResNET_EfficientNet_B5 = 'ResNET_efficientnet_b5.npy'
+    SIMCLR_YF_ResNet18 = 'simclr_yf_resnet_18.npy'
+    WHOLE_SIMCLR_YF_ResNet18 = 'simclr_whole_yf_resnet_18.npy'
+    OUR2_YF_ResNET152 = 'our2_yf_resnet152.npy'
+    OUR3_YF_ResNET152 = 'our3_yf_resnet152.npy'
+    OUR3_YF_ResNET18 = 'our3_yf_resnet18.npy'
+    WHOLE_OUR3_YF_ResNET18 = 'our3_whole_yf_resnet18.npy'
+    OUR3_YF_ResNET18_1 = 'our3_yf_resnet18_1.npy'
+    OUR3_YF_ResNET18_2 = 'our3_yf_resnet18_2.npy'
+    OUR3_YF_ResNET18_4 = 'our3_yf_resnet18_4.npy'
+    OUR3_YF_EfficientNet = 'our3_yf_efficientnet.npy'
+    WHOLE_OUR3_YF_EfficientNet = 'our3_whole_yf_efficientnet.npy'
+    ImageNet_ResNET18 = 'imagenet_resnet18.npy'
+    ImageNet_ResNET152 = 'imagenet_resnet152.npy'
+    EfficientNet_NonPretrained = 'non_pretrained_efficientnet.npy'
+    ResNET18_NonPretrained = 'non_pretrained_resnet18.npy'
     baidu_soccer_embeddings = 'baidu_soccer_embeddings.npy' # feature_dim found: 8576
 
-FEATURES = Features.ResNET_WHOLE_OUR2_YF_EfficientNet
+FEATURES = Features.OUR3_YF_EfficientNet
 
 def main(args):
 
